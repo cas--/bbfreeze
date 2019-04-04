@@ -8,6 +8,7 @@ import os
 import bbfreeze
 
 if win32ui:
+
     def test_guiscript():
         f = bbfreeze.Freezer()
         f.addScript("ex-mbox.py", True)

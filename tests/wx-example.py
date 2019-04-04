@@ -1,4 +1,4 @@
-#import wx
+# import wx
 from wxPython.wx import *
 
 
@@ -8,6 +8,7 @@ class MyApp(wxApp):
         frame.Show(true)
         self.SetTopWindow(frame)
         return true
+
 
 app = MyApp(0)
 app.MainLoop()

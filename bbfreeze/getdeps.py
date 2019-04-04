@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import sys, os, re, commands
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
 
     # -----------------------
     ## http://mail.python.org/pipermail/python-win32/2005-June/003446.html:
@@ -21,7 +22,7 @@ if sys.platform == 'win32':
     #
     # ----> EXCLUDE NETAPI32.DLL
 
-    #-----------------------------------------
+    # -----------------------------------------
     # as found on the internet:
     # shlwapi.dll is installed as a tied component of Internet Explorer, and
     # the version should always match that of the installed version of Internet Explorer
@@ -30,56 +31,62 @@ if sys.platform == 'win32':
     # ----> EXCLUDE SHLWAPI.DLL
 
     excludes = set(
-        ['ADVAPI.DLL',
-         'ADVAPI32.DLL',
-         'COMCTL32.DLL',
-         'COMDLG32.DLL',
-         'CRTDLL.DLL',
-         'CRYPT32.DLL',
-         'DCIMAN32.DLL',
-         'DDRAW.DLL',
-         'GDI32.DLL',
-         'GLU32.DLL',
-         'GLUB32.DLL',
-         'IMM32.DLL',
-         'KERNEL32.DLL',
-         'KERNELBASE.DLL',
-         'MFC42.DLL',
-         'MPR.DLL',
-         'MSVCRT.DLL',
-         'MSWSOCK.DLL',
-         'NTDLL.DLL',
-         'NETAPI32.DLL',
-         'ODBC32.DLL',
-         'OLE32.DLL',
-         'OLEAUT32.DLL',
-         'OPENGL32.DLL',
-         'RPCRT4.DLL',
-         'SHELL32.DLL',
-         'SHLWAPI.DLL',
-         'USER32.DLL',
-         'VERSION.DLL',
-         'WINMM.DLL',
-         'WINSPOOL.DRV',
-         'WS2HELP.DLL',
-         'WS2_32.DLL',
-         'WSOCK32.DLL',
-         'MSVCR90.DLL',
-         'POWRPROF.DLL',
-         'SHFOLDER.DLL',
-         'QUERY.DLL',
-         ])
+        [
+            "ADVAPI.DLL",
+            "ADVAPI32.DLL",
+            "COMCTL32.DLL",
+            "COMDLG32.DLL",
+            "CRTDLL.DLL",
+            "CRYPT32.DLL",
+            "DCIMAN32.DLL",
+            "DDRAW.DLL",
+            "GDI32.DLL",
+            "GLU32.DLL",
+            "GLUB32.DLL",
+            "IMM32.DLL",
+            "KERNEL32.DLL",
+            "KERNELBASE.DLL",
+            "MFC42.DLL",
+            "MPR.DLL",
+            "MSVCRT.DLL",
+            "MSWSOCK.DLL",
+            "NTDLL.DLL",
+            "NETAPI32.DLL",
+            "ODBC32.DLL",
+            "OLE32.DLL",
+            "OLEAUT32.DLL",
+            "OPENGL32.DLL",
+            "RPCRT4.DLL",
+            "SHELL32.DLL",
+            "SHLWAPI.DLL",
+            "USER32.DLL",
+            "VERSION.DLL",
+            "WINMM.DLL",
+            "WINSPOOL.DRV",
+            "WS2HELP.DLL",
+            "WS2_32.DLL",
+            "WSOCK32.DLL",
+            "MSVCR90.DLL",
+            "POWRPROF.DLL",
+            "SHFOLDER.DLL",
+            "QUERY.DLL",
+        ]
+    )
 
     def getImports(path):
         """Find the binary dependencies of PTH.
 
             This implementation walks through the PE header"""
         import pefile
+
         try:
             pe = pefile.PE(path, True)
             dlls = [x.dll for x in pe.DIRECTORY_ENTRY_IMPORT]
-        except Exception, err:
-            print "WARNING: could not determine binary dependencies for %r:%s" % (path, err)
+        except Exception as err:
+            print(
+                "WARNING: could not determine binary dependencies for %r:%s"
+                % (path, err)
+            )
             dlls = []
         return dlls
 
@@ -90,21 +97,25 @@ if sys.platform == 'win32':
         global _bpath
         if _bpath is None:
             _bpath = [os.path.dirname(sys.executable)]
-            if sys.platform == 'win32':
+            if sys.platform == "win32":
 
                 try:
                     import win32api
                 except ImportError:
 
-                    print "Warning: Cannot determine your Windows or System directories because pywin32 is not installed."
-                    print "Warning: Either install it from http://sourceforge.net/projects/pywin32/ or"
-                    print "Warning: add them to your PATH if .dlls are not found."
+                    print(
+                        "Warning: Cannot determine your Windows or System directories because pywin32 is not installed."
+                    )
+                    print(
+                        "Warning: Either install it from http://sourceforge.net/projects/pywin32/ or"
+                    )
+                    print("Warning: add them to your PATH if .dlls are not found.")
                 else:
                     sysdir = win32api.GetSystemDirectory()
-                    sysdir2 = os.path.join(sysdir, '../SYSTEM')
+                    sysdir2 = os.path.join(sysdir, "../SYSTEM")
                     windir = win32api.GetWindowsDirectory()
                     _bpath.extend([sysdir, sysdir2, windir])
-            _bpath.extend(os.environ.get('PATH', '').split(os.pathsep))
+            _bpath.extend(os.environ.get("PATH", "").split(os.pathsep))
         return _bpath
 
     def _getDependencies(path):
@@ -123,48 +134,68 @@ if sys.platform == 'win32':
                     deps.add(fp)
                     break
             else:
-                print "WARNING: could not find dll %r needed by %r in %r" % (dll, path, winpath)
+                print(
+                    "WARNING: could not find dll %r needed by %r in %r"
+                    % (dll, path, winpath)
+                )
         return deps
 
     def exclude(fp):
         u = os.path.basename(fp).upper()
-        return  u in excludes or u.startswith("API-MS-WIN-")
+        return u in excludes or u.startswith("API-MS-WIN-")
+
 
 elif sys.platform.startswith("freebsd"):
 
     def _getDependencies(path):
         os.environ["P"] = path
         s = commands.getoutput("ldd $P")
-        res = [x for x in re.compile(r"^ *.* => (.*) \(.*", re.MULTILINE).findall(s) if x]
+        res = [
+            x for x in re.compile(r"^ *.* => (.*) \(.*", re.MULTILINE).findall(s) if x
+        ]
         return res
 
     def exclude(fp):
         return bool(re.match(r"^/usr/lib/.*$", fp))
+
 
 elif sys.platform.startswith("sunos5"):
 
     def _getDependencies(path):
         os.environ["P"] = path
         s = commands.getoutput("ldd $P")
-        res = [x for x in re.compile(r"^\t* *.*=>\t* (.*)", re.MULTILINE).findall(s) if x]
+        res = [
+            x for x in re.compile(r"^\t* *.*=>\t* (.*)", re.MULTILINE).findall(s) if x
+        ]
         return res
 
     def exclude(fp):
         return bool(re.match(r"^/lib/.*$|^/usr/lib/.*$", fp))
+
 
 elif sys.platform.startswith("linux"):
 
     def _getDependencies(path):
         os.environ["P"] = path
         s = commands.getoutput("ldd $P")
-        res = [x for x in re.compile(r"^ *.* => (.*) \(.*", re.MULTILINE).findall(s) if x]
+        res = [
+            x for x in re.compile(r"^ *.* => (.*) \(.*", re.MULTILINE).findall(s) if x
+        ]
         return res
 
     def exclude(fp):
-        return re.match(r"^libc\.|^librt\.|^libcrypt\.|^libm\.|^libdl\.|^libpthread\.|^libnsl\.|^libutil\.|^libresolv\.|^ld-linux\.|^ld-linux-", os.path.basename(fp))
+        return re.match(
+            r"^libc\.|^librt\.|^libcrypt\.|^libm\.|^libdl\.|^libpthread\.|^libnsl\.|^libutil\.|^libresolv\.|^ld-linux\.|^ld-linux-",
+            os.path.basename(fp),
+        )
+
+
 else:
-    if sys.platform != 'darwin':
-        print "Warning: don't know how to handle binary dependencies on this platform (%s)" % (sys.platform,)
+    if sys.platform != "darwin":
+        print(
+            "Warning: don't know how to handle binary dependencies on this platform (%s)"
+            % (sys.platform,)
+        )
 
     def _getDependencies(fp):
         return []
@@ -172,11 +203,13 @@ else:
     def exclude(fp):
         return False
 
+
 _cache = {}
 
 
 def getDependencies(path):
     """Get direct and indirect dependencies of executable given in path"""
+
     def normedDeps(p):
         try:
             return _cache[p]
@@ -206,8 +239,8 @@ def main():
     deps = getDependencies(sys.argv[1:])
     deps = list(deps)
     deps.sort()
-    print "\n".join(deps)
+    print("\n".join(deps))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

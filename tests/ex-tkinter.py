@@ -1,13 +1,14 @@
+from __future__ import print_function
 import os
 import Tkinter
 
 
 def main():
-    msg = 'hello world'
+    msg = "hello world"
 
     def show(n):
         m = "%s: %s" % (n, os.environ.get(n))
-        print m
+        print(m)
         return m
 
     msg += "\n" + show("TCL_LIBRARY")
@@ -17,5 +18,6 @@ def main():
     Tkinter.Label(root, text=msg).grid(column=0, row=0)
     root.mainloop()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

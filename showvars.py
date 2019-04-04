@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 """show distutils's config variables"""
+from __future__ import print_function
 
 
 def main():
     import distutils.sysconfig
+
     items = distutils.sysconfig.get_config_vars().items()
     items.sort()
     for k, v in items:
-        print "%s: %r" % (k, v)
+        print("%s: %r" % (k, v))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

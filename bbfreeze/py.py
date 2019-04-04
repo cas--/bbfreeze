@@ -5,6 +5,7 @@
 # (http://matplotlib.sourceforge.net/examples/interactive.py)
 
 import sys
+
 main = __import__("__main__")
 
 
@@ -33,7 +34,7 @@ def parse_options(args, spec):
                 try:
                     v = args[i]
                 except IndexError:
-                    raise error("option %s needs an argument" % (a, ))
+                    raise error("option %s needs an argument" % (a,))
             opts.append((a, v))
             if a == "-c":
                 break
@@ -45,6 +46,7 @@ def parse_options(args, spec):
     newargs.extend(args[i:])
     return opts, newargs
 
+
 opts, args = parse_options(sys.argv[1:], "-u -c=")
 opts = dict(opts)
 sys.argv = args
@@ -52,17 +54,18 @@ if not sys.argv:
     sys.argv.append("")
 
 if opts.get("-c") is not None:
-    exec opts.get("-c") in main.__dict__
+    exec(opts.get("-c"), main.__dict__)
     sys.exit(0)
 
 if sys.argv[0]:
-    main.__dict__['__file__'] = sys.argv[0]
-    exec open(sys.argv[0], 'r') in main.__dict__
+    main.__dict__["__file__"] = sys.argv[0]
+    exec(open(sys.argv[0], "r"), main.__dict__)
     sys.exit(0)
 
 
 from code import InteractiveConsole
 import time
+
 try:
     # rlcompleter also depends on readline
     import rlcompleter
@@ -87,10 +90,10 @@ class MyConsole(InteractiveConsole):
 
         readline.set_completer(self.completer.complete)
         # Use tab for completions
-        readline.parse_and_bind('tab: complete')
+        readline.parse_and_bind("tab: complete")
         # This forces readline to automatically print the above list when tab
         # completion is set to 'complete'.
-        readline.parse_and_bind('set show-all-if-ambiguous on')
+        readline.parse_and_bind("set show-all-if-ambiguous on")
         # Bindings for incremental searches in the history. These searches
         # use the string typed so far on the command line and search
         # anything in the previous input history containing them.
@@ -114,6 +117,7 @@ class MyConsole(InteractiveConsole):
 
 if readline:
     import os
+
     histfile = os.path.expanduser("~/.pyhistory")
     if os.path.exists(histfile):
         readline.read_history_file(histfile)

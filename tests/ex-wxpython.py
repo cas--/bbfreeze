@@ -8,5 +8,6 @@ class MyApp(wxApp):
         self.SetTopWindow(frame)
         return true
 
+
 app = MyApp(0)
 app.MainLoop()

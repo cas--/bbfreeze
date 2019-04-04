@@ -24,16 +24,21 @@ class bdist_bbfreeze(easy_install):
     description = "freeze scripts using bbfreeze"
 
     user_options = [
-        ('bdist-base=', 'b',
-         "temporary directory for creating built distributions"),
-        ('plat-name=', 'p',
-         "platform name to embed in generated filenames "
-         "(default: %s)" % get_platform()),
-        ('dist-dir=', 'd',
-         "directory to put final built distributions in "
-         "[default: dist/<egg_name-egg_version>]"),
+        ("bdist-base=", "b", "temporary directory for creating built distributions"),
+        (
+            "plat-name=",
+            "p",
+            "platform name to embed in generated filenames "
+            "(default: %s)" % get_platform(),
+        ),
+        (
+            "dist-dir=",
+            "d",
+            "directory to put final built distributions in "
+            "[default: dist/<egg_name-egg_version>]",
+        ),
         # todo: include_py
-        ]
+    ]
 
     boolean_options = []
     negative_opt = {}
@@ -55,9 +60,8 @@ class bdist_bbfreeze(easy_install):
         # temporary directories (eg. we'll probably have
         # "build/bdist.<plat>/dumb", "build/bdist.<plat>/rpm", etc.)
         if self.bdist_base is None:
-            build_base = self.get_finalized_command('build').build_base
-            self.bdist_base = os.path.join(build_base,
-                                           'bbfreeze.' + self.plat_name)
+            build_base = self.get_finalized_command("build").build_base
+            self.bdist_base = os.path.join(build_base, "bbfreeze." + self.plat_name)
         self.script_dir = self.bdist_base
 
         if self.dist_dir is None:
@@ -73,24 +77,27 @@ class bdist_bbfreeze(easy_install):
         dist = Distribution(
             target,
             PathMetadata(target, os.path.abspath(ei.egg_info)),
-            project_name=ei.egg_name)
+            project_name=ei.egg_name,
+        )
 
         # install wrapper_Scripts into self.bdist_base == self.script_dir
         self.install_wrapper_scripts(dist)
 
         # now get a Freezer()
-        f = Freezer(os.path.join(self.dist_dir,
-                                 "%s-%s" % (ei.egg_name, ei.egg_version)))
+        f = Freezer(
+            os.path.join(self.dist_dir, "%s-%s" % (ei.egg_name, ei.egg_version))
+        )
         f.include_py = self.include_py
 
         # freeze each of the scripts
         for args in get_script_args(dist, wininst=wininst):
             name = args[0]
-            if name.endswith('.exe') or name.endswith(".exe.manifest"):
+            if name.endswith(".exe") or name.endswith(".exe.manifest"):
                 # skip .exes
                 continue
-            log.info('bbfreezing %s', os.path.join(self.script_dir, name))
-            f.addScript(os.path.join(self.script_dir, name),
-                        gui_only=name.endswith('.pyw'))
+            log.info("bbfreezing %s", os.path.join(self.script_dir, name))
+            f.addScript(
+                os.path.join(self.script_dir, name), gui_only=name.endswith(".pyw")
+            )
         # starts the freezing process
         f()

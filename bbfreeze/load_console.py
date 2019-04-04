@@ -2,7 +2,9 @@
 
 import sys, os, zlib, zipimport
 
-installdir = os.path.normpath(os.path.dirname(sys.path[0]))  # sys.path[0] == '.../library.zip'
+installdir = os.path.normpath(
+    os.path.dirname(sys.path[0])
+)  # sys.path[0] == '.../library.zip'
 
 
 def find_eggs():
@@ -11,17 +13,18 @@ def find_eggs():
             fp = os.path.join(installdir, x)
             sys.path.append(fp)
 
+
 find_eggs()
 
 
 def addldlibrarypath():
 
-    if sys.platform == 'darwin':
-        LD_LIBRARY_PATH = 'DYLD_LIBRARY_PATH'
+    if sys.platform == "darwin":
+        LD_LIBRARY_PATH = "DYLD_LIBRARY_PATH"
     else:
-        LD_LIBRARY_PATH = 'LD_LIBRARY_PATH'
+        LD_LIBRARY_PATH = "LD_LIBRARY_PATH"
 
-    #p = os.path.normpath(os.path.dirname(sys.executable))
+    # p = os.path.normpath(os.path.dirname(sys.executable))
     p = installdir
     try:
         paths = os.environ[LD_LIBRARY_PATH].split(os.pathsep)
@@ -31,7 +34,7 @@ def addldlibrarypath():
     if p not in paths:
         paths.insert(0, p)
         os.environ[LD_LIBRARY_PATH] = os.pathsep.join(paths)
-        #print "SETTING", LD_LIBRARY_PATH, os.environ[LD_LIBRARY_PATH]
+        # print "SETTING", LD_LIBRARY_PATH, os.environ[LD_LIBRARY_PATH]
         os.execv(sys.executable, sys.argv)
 
 
@@ -39,14 +42,14 @@ def addpath():
     # p = os.path.normpath(os.path.dirname(sys.executable))
     p = installdir
     try:
-        paths = os.environ['PATH'].split(os.pathsep)
+        paths = os.environ["PATH"].split(os.pathsep)
     except KeyError:
         paths = []
 
     if p not in paths:
         paths.insert(0, p)
-        os.environ['PATH'] = os.pathsep.join(paths)
-        #print "SETTING PATH:", os.environ['PATH']
+        os.environ["PATH"] = os.pathsep.join(paths)
+        # print "SETTING PATH:", os.environ['PATH']
 
 
 def addtcltk():
@@ -54,20 +57,21 @@ def addtcltk():
     libtcl = os.path.join(installdir, "lib-tcl")
 
     if os.path.isdir(libtk):
-        os.environ['TK_LIBRARY'] = libtk
+        os.environ["TK_LIBRARY"] = libtk
 
     if os.path.isdir(libtcl):
-        os.environ['TCL_LIBRARY'] = libtcl
+        os.environ["TCL_LIBRARY"] = libtcl
 
 
 def fixwin32com():
     """setup win32com to 'genpy' in a tmp directory
     """
-    if sys.platform != 'win32':
+    if sys.platform != "win32":
         return
 
     # hide imports by using exec. bbfreeze analyzes this file.
-    exec """
+    exec(
+        """
 try:
     import win32com.client
     import win32com.gen_py
@@ -83,12 +87,14 @@ else:
     win32com.__gen_path__ = tmpdir
     win32com.gen_py.__path__=[tmpdir]
 """
+    )
 
-#print "EXE:", sys.executable
-#print "SYS.PATH:", sys.path
+
+# print "EXE:", sys.executable
+# print "SYS.PATH:", sys.path
 
 addpath()
-#if sys.platform!='win32': # and hasattr(os, 'execv'):
+# if sys.platform!='win32': # and hasattr(os, 'execv'):
 #    addldlibrarypath()
 
 addtcltk()
@@ -108,21 +114,21 @@ if exe.lower().endswith(".exe"):
 m = __import__("__main__")
 
 # add '.py' suffix to prevent garbage from the warnings module
-m.__dict__['__file__'] = exe + '.py'
+m.__dict__["__file__"] = exe + ".py"
 exe = exe.replace(".", "_")
 importer = zipimport.zipimporter(sys.path[0])
 while 1:
     # if exe is a-b-c, try loading a-b-c, a-b and a
     try:
         code = importer.get_code("__main__%s__" % exe)
-    except zipimport.ZipImportError, err:
-        if '-' in exe:
-            exe = exe[:exe.find('-')]
+    except zipimport.ZipImportError as err:
+        if "-" in exe:
+            exe = exe[: exe.find("-")]
         else:
             raise err
     else:
         break
 if exe == "py":
-    exec code
+    exec(code)
 else:
-    exec code in m.__dict__
+    exec(code, m.__dict__)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 #! /usr/bin/env py.test
 
 import py, sys, os
@@ -7,7 +9,7 @@ pyexe = py.path.local(sys.executable)
 
 def check_encoding():
     enc = pyexe.sysexec("ex-fsenc.py")
-    print "ENC:", enc
+    print("ENC:", enc)
     enc_frozen = py.path.local("dist/ex-fsenc").sysexec()
     assert enc == enc_frozen
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import re
@@ -19,6 +20,7 @@ modulegraph.replacePackage("_xmlplus", "xml")
 
 try:
     import win32com
+
     for p in win32com.__path__[1:]:
         modulegraph.addPackagePath("win32com", p)
     for extra in ["win32com.shell", "win32com.mapi"]:
@@ -72,11 +74,12 @@ class EggAnalyzer(object):
         deps = pkg_resources.working_set.resolve(dist.requires())
         for x in deps:
             if x not in self.used:
-                print "adding %s as a dependency of %s" % (x, dist)
+                print("adding %s as a dependency of %s" % (x, dist))
                 self.used.add(x)
 
     def usableWorkingSet(self):
         from distutils.sysconfig import get_python_lib as gl
+
         pathcount = {}
         for lib in [gl(0, 0), gl(0, 1), gl(1, 0), gl(1, 1)]:
             pathcount[lib] = 2
@@ -130,7 +133,7 @@ class EggAnalyzer(object):
                 if dist.has_metadata("namespace_packages.txt"):
                     ns = list(dist.get_metadata_lines("namespace_packages.txt"))
                     if isinstance(m, modulegraph.Package) and m.identifier in ns:
-                        #print "SKIP:", ns, m
+                        # print "SKIP:", ns, m
                         return None
 
                 self.add(dist)
@@ -140,11 +143,11 @@ class EggAnalyzer(object):
         tmp = [(x.project_name, x) for x in self.used]
         tmp.sort()
         if tmp:
-            print "=" * 50
-            print "The following eggs are being used:"
+            print("=" * 50)
+            print("The following eggs are being used:")
             for x in tmp:
-                print repr(x[1])
-            print "=" * 50
+                print(repr(x[1]))
+            print("=" * 50)
 
     def copy(self, destdir):
         for x in self.used:
@@ -154,9 +157,9 @@ class EggAnalyzer(object):
                 try:
                     path = getattr(x._provider, "egg_info", None) or x._provider.path
                 except AttributeError:
-                    print "Warning: cannot copy egg-info for", x
+                    print("Warning: cannot copy egg-info for", x)
                     continue
-                print "Copying egg-info of %s from %r" % (x, path)
+                print("Copying egg-info of %s from %r" % (x, path))
                 if os.path.isdir(path):
                     basename = "%s.egg-info" % x.project_name
                     shutil.copytree(path, os.path.join(destdir, basename))
@@ -166,6 +169,7 @@ class EggAnalyzer(object):
 
 def fullname(p):
     import _bbfreeze_loader
+
     return os.path.join(os.path.dirname(_bbfreeze_loader.__file__), p)
 
 
@@ -211,13 +215,13 @@ class MyModuleGraph(modulegraph.ModuleGraph):
         """find module or zip module in directory or zipfile p"""
         if parent is not None:
             # assert path is not None
-            fullname = parent.identifier + '.' + name
+            fullname = parent.identifier + "." + name
         else:
             fullname = name
 
         try:
             return modulegraph.ModuleGraph.find_module(self, name, [p], parent)
-        except ImportError, err:
+        except ImportError as err:
             pass
 
         if not os.path.isfile(p):
@@ -227,7 +231,7 @@ class MyModuleGraph(modulegraph.ModuleGraph):
         m = zi.find_module(fullname.replace(".", "/"))
         if m:
             code = zi.get_code(fullname.replace(".", "/"))
-            return zi, p, ('', '', 314)
+            return zi, p, ("", "", 314)
         raise err
 
     def copyTree(self, source, dest, parent):
@@ -239,11 +243,11 @@ class MyModuleGraph(modulegraph.ModuleGraph):
 
         if parent is not None:
             # assert path is not None
-            fullname = parent.identifier + '.' + name
+            fullname = parent.identifier + "." + name
         else:
             fullname = name
 
-        #print "FIND_MODULE:", name, path, parent
+        # print "FIND_MODULE:", name, path, parent
 
         if path is None:
             path = self.path
@@ -262,7 +266,7 @@ class MyModuleGraph(modulegraph.ModuleGraph):
                 if p in paths_seen:
                     continue
                 paths_seen.add(p)
-                #res = modulegraph.ModuleGraph.find_module(self, name, [p], parent)
+                # res = modulegraph.ModuleGraph.find_module(self, name, [p], parent)
                 res = self._find_single_path(name, p, parent)
                 if found:
                     if res[2][2] == imp.PKG_DIRECTORY:
@@ -272,12 +276,14 @@ class MyModuleGraph(modulegraph.ModuleGraph):
                         append_if_uniq(res)
                     else:
                         return res
-            except ImportError, err:
+            except ImportError as err:
                 pass
 
         if len(found) > 1:
-            print "WARNING: found %s in multiple directories. Assuming it's a namespace package. (found in %s)" % (
-                fullname, ", ".join(x[1] for x in found))
+            print(
+                "WARNING: found %s in multiple directories. Assuming it's a namespace package. (found in %s)"
+                % (fullname, ", ".join(x[1] for x in found))
+            )
             for x in found[1:]:
                 modulegraph.addPackagePath(fullname, x[1])
 
@@ -286,7 +292,8 @@ class MyModuleGraph(modulegraph.ModuleGraph):
 
         raise err
 
-    def load_module(self, fqname, fp, pathname, (suffix, mode, typ)):
+    def load_module(self, fqname, fp, pathname, info):
+        suffix, mode, typ = info
         if typ == 314:
             m = self.createNode(ZipModule, fqname)
             code = fp.get_code(fqname.replace(".", "/"))
@@ -298,12 +305,13 @@ class MyModuleGraph(modulegraph.ModuleGraph):
             self.scan_code(m.code, m)
             return m
         else:
-            return modulegraph.ModuleGraph.load_module(self, fqname, fp, pathname, (suffix, mode, typ))
+            return modulegraph.ModuleGraph.load_module(self, fqname, fp, pathname, info)
 
 
 def replace_paths_in_code(co, newname):
     import new
-    if newname.endswith('.pyc'):
+
+    if newname.endswith(".pyc"):
         newname = newname[:-1]
 
     consts = list(co.co_consts)
@@ -312,11 +320,23 @@ def replace_paths_in_code(co, newname):
         if isinstance(consts[i], type(co)):
             consts[i] = replace_paths_in_code(consts[i], newname)
 
-    return new.code(co.co_argcount, co.co_nlocals, co.co_stacksize,
-                     co.co_flags, co.co_code, tuple(consts), co.co_names,
-                     co.co_varnames, newname, co.co_name,
-                     co.co_firstlineno, co.co_lnotab,
-                     co.co_freevars, co.co_cellvars)
+    return new.code(
+        co.co_argcount,
+        co.co_nlocals,
+        co.co_stacksize,
+        co.co_flags,
+        co.co_code,
+        tuple(consts),
+        co.co_names,
+        co.co_varnames,
+        newname,
+        co.co_name,
+        co.co_firstlineno,
+        co.co_lnotab,
+        co.co_freevars,
+        co.co_cellvars,
+    )
+
 
 def make_extension_loader(modname):
     src = """
@@ -337,7 +357,8 @@ def _bbfreeze_import_dynamic_module():
     imp = __import__("imp", level=0)
 """
 
-    src += """
+    src += (
+        """
     found = False
     for p in sys.path:
         if not os.path.isdir(p):
@@ -355,16 +376,15 @@ def _bbfreeze_import_dynamic_module():
             del sys.modules[__name__]
 
 _bbfreeze_import_dynamic_module()
-""" % modname
+"""
+        % modname
+    )
 
     return src
 
 
-
 def get_implies():
-    implies = {
-        "wxPython.wx": modulegraph.Alias('wx'),
-        }
+    implies = {"wxPython.wx": modulegraph.Alias("wx")}
 
     try:
         from email import _LOWERNAMES, _MIMENAMES
@@ -372,9 +392,9 @@ def get_implies():
         return implies
 
     for x in _LOWERNAMES:
-        implies['email.' + x] = modulegraph.Alias('email.' + x.lower())
+        implies["email." + x] = modulegraph.Alias("email." + x.lower())
     for x in _MIMENAMES:
-        implies['email.MIME' + x] = modulegraph.Alias('email.mime.' + x.lower())
+        implies["email.MIME" + x] = modulegraph.Alias("email.mime." + x.lower())
 
     return implies
 
@@ -393,16 +413,17 @@ class Freezer(object):
 
         # workaround for virtualenv's distutils monkeypatching
         import distutils
+
         self.mf._load_package("distutils", distutils.__path__[0], None)
 
         self._loaderNode = None
-        if sys.platform == 'win32':
-            self.linkmethod = 'loader'
+        if sys.platform == "win32":
+            self.linkmethod = "loader"
         else:
-            self.linkmethod = 'hardlink'
+            self.linkmethod = "hardlink"
 
         self.console = fullname("console.exe")
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             self.consolew = fullname("consolew.exe")
 
         self._have_console = False
@@ -419,28 +440,39 @@ class Freezer(object):
         return mtime
 
     def _entry_script(self, path):
-        f = open(path, 'r')
+        f = open(path, "r")
         lines = [f.readline(), f.readline()]
         del f
         eicomment = "# EASY-INSTALL-ENTRY-SCRIPT: "
         for line in lines:
             if line.startswith(eicomment):
-                values = [x.strip("'\"") for x in line[len(eicomment):].strip().split(",")]
-                print path, "is an easy install entry script. running pkg_resources.require(%r)" % (values[0],)
+                values = [
+                    x.strip("'\"") for x in line[len(eicomment) :].strip().split(",")
+                ]
+                print(
+                    path,
+                    "is an easy install entry script. running pkg_resources.require(%r)"
+                    % (values[0],),
+                )
                 pkg_resources.require(values[0])
                 ep = pkg_resources.get_entry_info(*values)
-                print "entry point is", ep
+                print("entry point is", ep)
                 return ep.module_name
         return None
 
     def addEntryPoint(self, name, importspec):
         modname, attr = importspec.split(":")
         m = self.mf.createNode(modulegraph.Script, name)
-        m.code = compile("""
+        m.code = compile(
+            """
 if __name__ == '__main__':
     import sys, %s
     sys.exit(%s.%s())
-""" % (modname, modname, attr), name, "exec")
+"""
+            % (modname, modname, attr),
+            name,
+            "exec",
+        )
         self.mf.createReference(None, m)
         self.mf.scan_code(m.code, m)
         return m
@@ -481,7 +513,7 @@ if __name__ == '__main__':
         numApplied = 0
         for x in self._recipes:
             if x(self.mf):
-                print "*** applied", x
+                print("*** applied", x)
                 self._recipes.remove(x)
                 numApplied += 1
         return numApplied
@@ -491,6 +523,7 @@ if __name__ == '__main__':
 
     def addExecutable(self, exe):
         from bbfreeze import getdeps
+
         e = self.mf.createNode(Executable, os.path.basename(exe))
         e.filename = exe
         self.mf.createReference(self.mf, e)
@@ -502,7 +535,10 @@ if __name__ == '__main__':
 
     def findBinaryDependencies(self):
         from bbfreeze import getdeps
-        assert os.access(self.console, os.X_OK), "%r is not executable" % (self.console,)
+
+        assert os.access(self.console, os.X_OK), "%r is not executable" % (
+            self.console,
+        )
 
         for so in getdeps.getDependencies(self.console):
             n = self.mf.createNode(SharedLibrary, os.path.basename(so))
@@ -529,7 +565,10 @@ if __name__ == '__main__':
 
         status, out = commands.getstatusoutput("objdump -x $S")
         if status:
-            print "WARNING: objdump failed: could not determine RPATH by running 'objdump -x %s'" % exe
+            print(
+                "WARNING: objdump failed: could not determine RPATH by running 'objdump -x %s'"
+                % exe
+            )
             return None
 
         tmp = re.findall("[ \t]+RPATH[ \t]*(.*)", out)
@@ -537,17 +576,19 @@ if __name__ == '__main__':
             return tmp[0].strip()
 
         if len(tmp) > 1:
-            raise RuntimeError("Could not determine RPATH from objdump output: %r" % out)
+            raise RuntimeError(
+                "Could not determine RPATH from objdump output: %r" % out
+            )
 
         return ""
 
     def _setRPath(self, exe, rpath):
         os.environ["S"] = exe
         os.environ["R"] = rpath
-        print "running 'patchelf --set-rpath '%s' %s'" % (rpath, exe)
+        print("running 'patchelf --set-rpath '%s' %s'" % (rpath, exe))
         status, out = commands.getstatusoutput("patchelf --set-rpath $R $S")
         if status != 0:
-            print "WARNING: failed to set RPATH for %s: %s" % (exe, out)
+            print("WARNING: failed to set RPATH for %s: %s" % (exe, out))
 
     def ensureRPath(self, exe):
         if sys.platform not in ("linux2", "linux3", "sunos5"):
@@ -565,12 +606,15 @@ if __name__ == '__main__':
             # print "RPATH %s of %s is fine" % (current_rpath, exe)
             return
 
-        print "RPATH %r of %s needs adjustment. make sure you have the patchelf executable installed." % (current_rpath, exe)
+        print(
+            "RPATH %r of %s needs adjustment. make sure you have the patchelf executable installed."
+            % (current_rpath, exe)
+        )
         self._setRPath(exe, expected_rpath)
 
     def __call__(self):
         if self.include_py:
-            pyscript = os.path.join(os.path.dirname(__file__), 'py.py')
+            pyscript = os.path.join(os.path.dirname(__file__), "py.py")
             s = self.mf.run_script(pyscript)
             s.gui_only = False
 
@@ -585,7 +629,7 @@ if __name__ == '__main__':
         # executable bit
         xconsole = os.path.join(self.distdir, "bbfreeze-console.exe")
         shutil.copy2(self.console, xconsole)
-        os.chmod(xconsole, 0755)
+        os.chmod(xconsole, 0o755)
         self.console = xconsole
 
         while 1:
@@ -595,16 +639,16 @@ if __name__ == '__main__':
 
         zipfilepath = os.path.join(self.distdir, "library.zip")
         self.zipfilepath = zipfilepath
-        if self.linkmethod == 'loader' and sys.platform == 'win32':
+        if self.linkmethod == "loader" and sys.platform == "win32":
             pass  # open(library, 'w')
         else:
             shutil.copy(self.console, zipfilepath)
             self.ensureRPath(zipfilepath)
 
         if os.path.exists(zipfilepath):
-            mode = 'a'
+            mode = "a"
         else:
-            mode = 'w'
+            mode = "w"
 
         self.outfile = zipfile.PyZipFile(zipfilepath, mode, zipfile.ZIP_DEFLATED)
 
@@ -631,7 +675,7 @@ if __name__ == '__main__':
             try:
                 m = getattr(self, "_handle_" + x.__class__.__name__)
             except AttributeError:
-                print "WARNING: dont know how to handle", x
+                print("WARNING: dont know how to handle", x)
                 continue
             m(x)
 
@@ -646,10 +690,11 @@ if __name__ == '__main__':
             self.showxref()
 
     def finish_dist(self):
-        if sys.platform != 'darwin':
+        if sys.platform != "darwin":
             return
 
         from macholib.MachOStandalone import MachOStandalone
+
         d = os.path.join(os.path.abspath(self.distdir), "")
         m = MachOStandalone(d, d)
         m.run(contents="@executable_path/")
@@ -686,14 +731,15 @@ if __name__ == '__main__':
         base, ext = os.path.splitext(basefilename)
         # fedora has zlibmodule.so, timemodule.so,...
         if base not in [name, name + "module"]:
-            code = compile(make_extension_loader(name + ext),
-                           "ExtensionLoader.py", "exec")
+            code = compile(
+                make_extension_loader(name + ext), "ExtensionLoader.py", "exec"
+            )
             fn = name.replace(".", "/") + ".pyc"
             self._writecode(fn, time.time(), code)
 
         dst = os.path.join(self.distdir, name + ext)
         shutil.copy2(m.filename, dst)
-        os.chmod(dst, 0755)
+        os.chmod(dst, 0o755)
         # when searching for DLL's the location matters, so don't
         # add the destination file, but rather the source file
         self.binaries.append(m.filename)
@@ -705,7 +751,7 @@ if __name__ == '__main__':
         self._writecode(fn, mtime, m.code)
 
     def _handle_SourceModule(self, m):
-        fn = m.identifier.replace(".", "/") + '.pyc'
+        fn = m.identifier.replace(".", "/") + ".pyc"
         mtime = self._get_mtime(m.filename)
         self._writecode(fn, mtime, m.code)
 
@@ -719,8 +765,11 @@ if __name__ == '__main__':
         self._writecode(fn, mtime, m.code)
 
     def _handle_CompiledModule(self, m):
-        fn = m.identifier.replace(".", "/") + '.pyc'
-        print "WARNING: using .pyc file %r for which no source file could be found." % (fn,)
+        fn = m.identifier.replace(".", "/") + ".pyc"
+        print(
+            "WARNING: using .pyc file %r for which no source file could be found."
+            % (fn,)
+        )
         mtime = self._get_mtime(m.filename)
         self._writecode(fn, mtime, m.code)
 
@@ -737,15 +786,17 @@ if __name__ == '__main__':
                 fn = fn[:-4]
 
             exename = fn
-            fn = '__main__%s__.pyc' % fn.replace(".", "_")
+            fn = "__main__%s__.pyc" % fn.replace(".", "_")
 
         self._writecode(fn, mtime, m.code)
         if exename:
-            if sys.platform == 'win32':
-                exename += '.exe'
-            gui_only = getattr(m, 'gui_only', False)
+            if sys.platform == "win32":
+                exename += ".exe"
+            gui_only = getattr(m, "gui_only", False)
 
-            self.link(self.zipfilepath, os.path.join(self.distdir, exename), gui_only=gui_only)
+            self.link(
+                self.zipfilepath, os.path.join(self.distdir, exename), gui_only=gui_only
+            )
 
     def _writecode(self, fn, mtime, code):
         code = replace_paths_in_code(code, fn)
@@ -765,27 +816,30 @@ if __name__ == '__main__':
             os.unlink(dst)
 
         lm = self.linkmethod
-        if lm == 'symlink':
+        if lm == "symlink":
             assert os.path.dirname(src) == os.path.dirname(dst)
             os.symlink(os.path.basename(src), dst)
-            os.chmod(dst, 0755)
-        elif lm == 'hardlink':
+            os.chmod(dst, 0o755)
+        elif lm == "hardlink":
             os.link(src, dst)
-            os.chmod(dst, 0755)
-        elif lm == 'loader':
-            if gui_only and sys.platform == 'win32':
+            os.chmod(dst, 0o755)
+        elif lm == "loader":
+            if gui_only and sys.platform == "win32":
                 shutil.copy2(self.consolew, dst)
             else:
                 shutil.copy2(self.console, dst)
-            os.chmod(dst, 0755)
+            os.chmod(dst, 0o755)
 
-            if self.icon and sys.platform == 'win32':
+            if self.icon and sys.platform == "win32":
                 try:
                     from bbfreeze import winexeutil
+
                     # Set executable icon
                     winexeutil.set_icon(dst, self.icon)
-                except ImportError, e:
-                    raise RuntimeError("Cannot add icon to executable. Error: %s" % (e.message))
+                except ImportError as e:
+                    raise RuntimeError(
+                        "Cannot add icon to executable. Error: %s" % (e.message)
+                    )
         else:
             raise RuntimeError("linkmethod %r not supported" % (self.linkmethod,))
 
@@ -794,21 +848,21 @@ if __name__ == '__main__':
         self.ensureRPath(p)
 
     def stripBinary(self, p):
-        if sys.platform == 'win32' or sys.platform == 'darwin':
+        if sys.platform == "win32" or sys.platform == "darwin":
             return
-        os.environ['S'] = p
-        os.system('strip $S')
+        os.environ["S"] = p
+        os.system("strip $S")
 
     def _handle_Executable(self, m):
         dst = os.path.join(self.distdir, os.path.basename(m.filename))
         shutil.copy2(m.filename, dst)
-        os.chmod(dst, 0755)
+        os.chmod(dst, 0o755)
         self.adaptBinary(dst)
 
     def _handle_SharedLibrary(self, m):
         dst = os.path.join(self.distdir, os.path.basename(m.filename))
         shutil.copy2(m.filename, dst)
-        os.chmod(dst, 0755)
+        os.chmod(dst, 0o755)
         self.adaptBinary(dst)
 
     def showxref(self):
@@ -822,6 +876,7 @@ if __name__ == '__main__':
         ofi.close()
 
         import webbrowser
+
         try:
             webbrowser.open("file://" + htmlfile)
         except webbrowser.Error:
@@ -829,4 +884,5 @@ if __name__ == '__main__':
             pass
         # how long does it take to start the browser?
         import threading
+
         threading.Timer(5, os.remove, args=[htmlfile])

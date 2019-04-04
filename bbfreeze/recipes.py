@@ -1,9 +1,11 @@
+from __future__ import print_function
 import sys
 import os
 
 
 def isRealModule(m):
     from modulegraph.modulegraph import BadModule, MissingModule, ExcludedModule
+
     if m is None or isinstance(m, (BadModule, MissingModule, ExcludedModule)):
         return False
     else:
@@ -17,6 +19,7 @@ def include_whole_package(name, skip=lambda x: False):
             return None
 
         from bbfreeze.freezer import ZipModule
+
         if isinstance(m, ZipModule):
             return None
 
@@ -34,7 +37,7 @@ def include_whole_package(name, skip=lambda x: False):
                     modname = "%s.%s" % (pkgname, f[:-3])
 
                 if not skip(modname):
-                    mf.import_hook(modname, m, ['*'])
+                    mf.import_hook(modname, m, ["*"])
         return True
 
     recipe.__name__ = "recipe_" + name
@@ -48,28 +51,32 @@ def find_all_packages(name, skip=lambda x: False):
             return None
 
         from bbfreeze.freezer import ZipModule
+
         if isinstance(m, ZipModule):
             return None
 
         import setuptools
+
         packages = setuptools.find_packages(os.path.dirname(m.filename))
 
         for pkg in packages:
-            pkgname = '%s.%s' % (name, pkg)
+            pkgname = "%s.%s" % (name, pkg)
             if not skip(pkgname):
-                mf.import_hook(pkgname, m, ['*'])
+                mf.import_hook(pkgname, m, ["*"])
         return True
+
     recipe.__name__ = "recipe_" + name
     return recipe
 
-recipe_flup = find_all_packages('flup')
-recipe_django = find_all_packages('django')
+
+recipe_flup = find_all_packages("flup")
+recipe_django = find_all_packages("django")
 recipe_py = include_whole_package("py", skip=lambda x: x.startswith("py.test.tkinter"))
 recipe_IPython = find_all_packages("IPython")
 
 
 def recipe_django_core_management(mf):
-    m = mf.findNode('django.core.management')
+    m = mf.findNode("django.core.management")
     if not isRealModule(m):
         return None
     refs = ["IPython"]
@@ -83,86 +90,107 @@ def recipe_xmlrpclib(mf):
     if not isRealModule(m):
         return None
     # we have python 2.0, SlowParser is not used as xml.parsers.expat.ParserCreate is available
-    mf.removeReference(m, 'xmllib')
+    mf.removeReference(m, "xmllib")
     return True
 
 
 def recipe_ctypes_macholib(mf):
     if os.name == "posix" and sys.platform == "darwin":
         return None
-    m = mf.findNode('ctypes.macholib.dyld')
+    m = mf.findNode("ctypes.macholib.dyld")
     if not isRealModule(m):
         return None
-    mf.removeReference('ctypes.util', m)
+    mf.removeReference("ctypes.util", m)
     return True
 
 
 def recipe_doctest(mf):
-    m = mf.findNode('doctest')
+    m = mf.findNode("doctest")
     if not isRealModule(m):
         return None
 
-    refs = ['collections', 'decimal', 'difflib', 'heapq', 'pickle', 'Cookie', 'pickletools', 'memcache', 'simplegeneric']
+    refs = [
+        "collections",
+        "decimal",
+        "difflib",
+        "heapq",
+        "pickle",
+        "Cookie",
+        "pickletools",
+        "memcache",
+        "simplegeneric",
+    ]
     for ref in refs:
         mf.removeReference(ref, m)
     return True
 
 
 def recipe_twisted_python_versions(mf):
-    m = mf.findNode('twisted.python.versions')
+    m = mf.findNode("twisted.python.versions")
     if not isRealModule(m):
         return None
-    mf.removeReference(m, 'xml.dom.minidom')
+    mf.removeReference(m, "xml.dom.minidom")
     return True
 
 
 def recipe_pydoc(mf):
-    m = mf.findNode('pydoc')
+    m = mf.findNode("pydoc")
     if not isRealModule(m):
         return None
 
     refs = [
-        'Tkinter', 'tty', 'BaseHTTPServer', 'mimetools', 'select',
-        'threading', 'ic', 'getopt',
+        "Tkinter",
+        "tty",
+        "BaseHTTPServer",
+        "mimetools",
+        "select",
+        "threading",
+        "ic",
+        "getopt",
     ]
-    if sys.platform != 'win32':
-        refs.append('nturl2path')
+    if sys.platform != "win32":
+        refs.append("nturl2path")
     for ref in refs:
         mf.removeReference(m, ref)
     return True
 
 
 def recipe_urllib(mf):
-    m = mf.findNode('urllib')
+    m = mf.findNode("urllib")
     if not isRealModule(m):
         return None
     retval = None
 
-    if sys.platform != 'darwin':
-        for ref in ['ctypes', 'ctypes.util']:
+    if sys.platform != "darwin":
+        for ref in ["ctypes", "ctypes.util"]:
             mf.removeReference(m, ref)
         retval = True
 
-    if os.name != 'mac':
-        mf.removeReference(m, 'macurl2path')
+    if os.name != "mac":
+        mf.removeReference(m, "macurl2path")
         retval = True
 
-    if os.name != 'nt':
-        mf.removeReference(m, 'nturl2path')
+    if os.name != "nt":
+        mf.removeReference(m, "nturl2path")
         retval = True
     return retval
 
 
 def recipe_docutils(mf):
-    m = mf.findNode('docutils')
+    m = mf.findNode("docutils")
     if not isRealModule(m):
         return None
 
     for pkg in [
-            'languages', 'parsers', 'readers', 'writers',
-            'parsers.rst.directives', 'parsers.rst.languages']:
+        "languages",
+        "parsers",
+        "readers",
+        "writers",
+        "parsers.rst.directives",
+        "parsers.rst.languages",
+    ]:
         try:
-            mf.import_hook('docutils.' + pkg, m, ['*'])
+            mf.import_hook("docutils." + pkg, m, ["*"])
         except SyntaxError:  # in docutils/writers/newlatex2e.py
             pass
     return True
@@ -174,10 +202,11 @@ def recipe_pythoncom(mf):
         return None
     import pythoncom
     from bbfreeze.freezer import SharedLibrary
+
     n = mf.createNode(SharedLibrary, os.path.basename(pythoncom.__file__))
     n.filename = pythoncom.__file__
     mf.createReference(m, n)
-    mf.import_hook('pywintypes', m, ['*'])
+    mf.import_hook("pywintypes", m, ["*"])
     return True
 
 
@@ -187,6 +216,7 @@ def recipe_pywintypes(mf):
         return None
     import pywintypes
     from bbfreeze.freezer import SharedLibrary
+
     n = mf.createNode(SharedLibrary, os.path.basename(pywintypes.__file__))
     n.filename = pywintypes.__file__
     mf.createReference(m, n)
@@ -194,36 +224,40 @@ def recipe_pywintypes(mf):
 
 
 def recipe_time(mf):
-    m = mf.findNode('time')
+    m = mf.findNode("time")
 
     # time is a BuiltinModule on win32, therefor m.filename is None
     if m is None:  # or m.filename is None:
         return None
 
-    mf.import_hook('_strptime', m, ['*'])
+    mf.import_hook("_strptime", m, ["*"])
     return True
 
 
 def recipe_distutils_util_get_platform(mf):
-    m = mf.findNode('distutils.util')
+    m = mf.findNode("distutils.util")
     if not isRealModule(m):
         return None
 
     import distutils.util
+
     val = distutils.util.get_platform()
 
     repl = """
 def get_platform():
     return %r
-""" % (val,)
+""" % (
+        val,
+    )
 
     import codehack
+
     m.code = codehack.replace_functions(m.code, repl)
     return True
 
 
 def recipe_matplotlib(mf):
-    m = mf.findNode('matplotlib')
+    m = mf.findNode("matplotlib")
     if not isRealModule(m):
         return
     import matplotlib
@@ -234,30 +268,31 @@ def recipe_matplotlib(mf):
         mf.copyTree(dp, "matplotlibdata", m)
 
     mf.import_hook("matplotlib.numerix.random_array", m)
-    backend_name = 'backend_' + matplotlib.get_backend().lower()
-    print "recipe_matplotlib: using the %s matplotlib backend" % (backend_name, )
-    mf.import_hook('matplotlib.backends.' + backend_name, m)
+    backend_name = "backend_" + matplotlib.get_backend().lower()
+    print("recipe_matplotlib: using the %s matplotlib backend" % (backend_name,))
+    mf.import_hook("matplotlib.backends." + backend_name, m)
     return True
 
 
 def recipe_tkinter(mf):
-    m = mf.findNode('_tkinter')
+    m = mf.findNode("_tkinter")
     if m is None or m.filename is None:
         return None
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         import Tkinter
+
         tcldir = os.environ.get("TCL_LIBRARY")
         if tcldir:
             mf.copyTree(tcldir, "lib-tcl", m)
         else:
-            print "WARNING: recipe_tkinter: TCL_LIBRARY not set. cannot find lib-tcl"
+            print("WARNING: recipe_tkinter: TCL_LIBRARY not set. cannot find lib-tcl")
 
         tkdir = os.environ.get("TK_LIBRARY")
         if tkdir:
             mf.copyTree(tkdir, "lib-tk", m)
         else:
-            print "WARNING: recipe_tkinter: TK_LIBRARY not set. cannot find lib-tk"
+            print("WARNING: recipe_tkinter: TK_LIBRARY not set. cannot find lib-tk")
     else:
         import _tkinter
         from bbfreeze import getdeps
@@ -271,7 +306,9 @@ def recipe_tkinter(mf):
 
         for x in deps:
             if os.path.basename(x).startswith("libtcl"):
-                tcldir = os.path.join(os.path.dirname(x), "tcl%s" % _tkinter.TCL_VERSION)
+                tcldir = os.path.join(
+                    os.path.dirname(x), "tcl%s" % _tkinter.TCL_VERSION
+                )
                 if os.path.isdir(tcldir):
                     mf.copyTree(tcldir, "lib-tcl", m)
 
@@ -282,15 +319,26 @@ def recipe_gtk_and_friends(mf):
     retval = False
     from bbfreeze.freezer import SharedLibrary
     from modulegraph.modulegraph import ExcludedModule
+
     for x in list(mf.flatten()):
         if not isinstance(x, SharedLibrary):
             continue
 
-        prefixes = ["libpango", "libpangocairo", "libpangoft", "libgtk", "libgdk", "libglib", "libgmodule", "libgobject", "libgthread"]
+        prefixes = [
+            "libpango",
+            "libpangocairo",
+            "libpangoft",
+            "libgtk",
+            "libgdk",
+            "libglib",
+            "libgmodule",
+            "libgobject",
+            "libgthread",
+        ]
 
         for p in prefixes:
             if x.identifier.startswith(p):
-                print "SKIPPING:", x
+                print("SKIPPING:", x)
                 x.__class__ = ExcludedModule
                 retval = True
                 break
@@ -315,7 +363,7 @@ def recipe_cElementTree(mf):
     if not isRealModule(m):
         return None
 
-    #mf.import_hook("pyexpat", m, "*")
+    # mf.import_hook("pyexpat", m, "*")
     mf.import_hook("elementtree.ElementTree")
     return True
 

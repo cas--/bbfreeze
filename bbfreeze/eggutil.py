@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import sys
 import os
 import stat
@@ -34,6 +35,7 @@ class Entry(object):
 
         code = marshal.loads(data[8:])
         from bbfreeze import freezer
+
         code = freezer.replace_paths_in_code(code, self.name)
         return "".join([imp.get_magic(), mtime, marshal.dumps(code)])
 
@@ -58,7 +60,7 @@ def walk_dir(path):
     path = os.path.normpath(path)
 
     def relname(n):
-        return os.path.join(dirpath, n)[len(path) + 1:]
+        return os.path.join(dirpath, n)[len(path) + 1 :]
 
     for dirpath, dirnames, filenames in os.walk(path):
         for x in dirnames:
@@ -67,9 +69,11 @@ def walk_dir(path):
 
         for x in filenames:
             fp = os.path.join(path, dirpath, x)
-            yield Entry(name=relname(x),
-                        read=lambda fp=fp: open(fp, "rb").read(),
-                        stat=lambda fp=fp: os.stat(fp))
+            yield Entry(
+                name=relname(x),
+                read=lambda fp=fp: open(fp, "rb").read(),
+                stat=lambda fp=fp: os.stat(fp),
+            )
 
 
 def default_filter(entries):
@@ -108,56 +112,76 @@ def write_directory(path, entries):
         if x.stat is None:
             continue
 
-        if x.isdir() and sys.platform == 'win32':
+        if x.isdir() and sys.platform == "win32":
             continue
 
         st = x.stat()
         mode = stat.S_IMODE(st.st_mode)
-        if hasattr(os, 'utime'):
+        if hasattr(os, "utime"):
             os.utime(fn, (st.st_atime, st.st_mtime))
-        if hasattr(os, 'chmod'):
+        if hasattr(os, "chmod"):
             os.chmod(fn, mode)
 
 
 def copyDistribution(distribution, destdir):
     import pkg_resources
+
     location = distribution.location
 
-    if (isinstance(distribution._provider, pkg_resources.PathMetadata)
+    if (
+        isinstance(distribution._provider, pkg_resources.PathMetadata)
         and not distribution.location.lower().endswith(".egg")
-        and os.path.exists(os.path.join(distribution.location, "setup.py"))):
+        and os.path.exists(os.path.join(distribution.location, "setup.py"))
+    ):
         # this seems to be a development egg. FIXME the above test looks fragile
 
-        setuptools_dist = pkg_resources.working_set.find(pkg_resources.Requirement.parse("setuptools"))
+        setuptools_dist = pkg_resources.working_set.find(
+            pkg_resources.Requirement.parse("setuptools")
+        )
         if setuptools_dist:
             os.environ["PYTHONPATH"] = setuptools_dist.location
 
         cwd = os.getcwd()
         os.chdir(distribution.location)
         try:
-            print distribution.location, "looks like a development egg. need to run setup.py bdist_egg"
+            print(
+                distribution.location,
+                "looks like a development egg. need to run setup.py bdist_egg",
+            )
 
             from distutils.spawn import spawn
             import tempfile
             import atexit
             import shutil
+
             tmp = tempfile.mkdtemp()
             atexit.register(shutil.rmtree, tmp)
-            cmd = [sys.executable, "-c", "import sys,__main__,setuptools; del sys.argv[0]; __main__.__file__=sys.argv[0], execfile(sys.argv[0],__main__.__dict__,__main__.__dict__)", "setup.py", "-q", "bdist_egg", "--dist", tmp]
+            cmd = [
+                sys.executable,
+                "-c",
+                "import sys,__main__,setuptools; del sys.argv[0]; __main__.__file__=sys.argv[0], execfile(sys.argv[0],__main__.__dict__,__main__.__dict__)",
+                "setup.py",
+                "-q",
+                "bdist_egg",
+                "--dist",
+                tmp,
+            ]
 
-            print "running %r in %r" % (" ".join(cmd), os.getcwd())
+            print("running %r in %r" % (" ".join(cmd), os.getcwd()))
             spawn(cmd)
-            print "====> setup.py bdist_egg finished in", os.getcwd()
+            print("====> setup.py bdist_egg finished in", os.getcwd())
             files = os.listdir(tmp)
             assert len(files) > 0, "output directory of bdist_egg command is empty"
-            assert len(files) == 1, "expected exactly one file in output directory of bdist_egg command"
+            assert (
+                len(files) == 1
+            ), "expected exactly one file in output directory of bdist_egg command"
 
             location = os.path.join(tmp, files[0])
         finally:
             os.chdir(cwd)
 
     dest = os.path.join(destdir, distribution.egg_name() + ".egg")
-    print "Copying", location, "to", dest
+    print("Copying", location, "to", dest)
 
     entries = list(walk(location))
     name2compile = {}
@@ -178,13 +202,13 @@ def copyDistribution(distribution, destdir):
 
     for x in name2compile.values():
         try:
-            code = compile(x.read() + '\n', x.name, 'exec')
-        except Exception, err:
-            print "WARNING: Could not compile %r: %r" % (x.name, err)
+            code = compile(x.read() + "\n", x.name, "exec")
+        except Exception as err:
+            print("WARNING: Could not compile %r: %r" % (x.name, err))
             continue
 
         data = imp.get_magic() + struct.pack("<i", mtime) + marshal.dumps(code)
-        entries.append(Entry(name=x.name + 'c', read=lambda data=data: data))
+        entries.append(Entry(name=x.name + "c", read=lambda data=data: data))
 
     if distribution.has_metadata("zip-safe") and not os.path.isdir(location):
         write_zipfile(dest, entries)
