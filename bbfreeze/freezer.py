@@ -11,7 +11,8 @@ import zipimport
 import commands
 
 from modulegraph import modulegraph
-modulegraph.ReplacePackage("_xmlplus", "xml")
+
+modulegraph.replacePackage("_xmlplus", "xml")
 
 # workaround for win32com hacks.
 # see: http://starship.python.net/crew/theller/moin.cgi/WinShell
@@ -19,7 +20,7 @@ modulegraph.ReplacePackage("_xmlplus", "xml")
 try:
     import win32com
     for p in win32com.__path__[1:]:
-        modulegraph.AddPackagePath("win32com", p)
+        modulegraph.addPackagePath("win32com", p)
     for extra in ["win32com.shell", "win32com.mapi"]:
         try:
             __import__(extra)
@@ -27,7 +28,7 @@ try:
             continue
         m = sys.modules[extra]
         for p in m.__path__[1:]:
-            modulegraph.AddPackagePath(extra, p)
+            modulegraph.addPackagePath(extra, p)
 except ImportError:
     pass
 
@@ -37,7 +38,7 @@ except ImportError:
     pass
 else:
     for p in xml.__path__:
-        modulegraph.AddPackagePath("xml", p)
+        modulegraph.addPackagePath("xml", p)
 
 from bbfreeze import recipes, eggutil
 
@@ -278,7 +279,7 @@ class MyModuleGraph(modulegraph.ModuleGraph):
             print "WARNING: found %s in multiple directories. Assuming it's a namespace package. (found in %s)" % (
                 fullname, ", ".join(x[1] for x in found))
             for x in found[1:]:
-                modulegraph.AddPackagePath(fullname, x[1])
+                modulegraph.addPackagePath(fullname, x[1])
 
         if found:
             return found[0]
@@ -392,7 +393,7 @@ class Freezer(object):
 
         # workaround for virtualenv's distutils monkeypatching
         import distutils
-        self.mf.load_package("distutils", distutils.__path__[0])
+        self.mf._load_package("distutils", distutils.__path__[0], None)
 
         self._loaderNode = None
         if sys.platform == 'win32':
@@ -461,7 +462,6 @@ if __name__ == '__main__':
             if name not in sys.builtin_module_names:
                 self.mf.import_hook(name)
 
-    
     def setIcon(self, filename):
         self.icon = filename
 
@@ -666,10 +666,18 @@ if __name__ == '__main__':
     def _handle_AliasNode(self, m):
         pass
 
-    def _handle_NamespaceModule(self, m):
-        fn = "%s/__init__.py" % (m.identifier.replace(".", "/"),)
-        code = compile("", fn, "exec")
-        self._writecode(fn + "c", time.time(), code)
+    def _handle_NamespacePackage(self, m):
+        """Workaround for zope package missing __init__.py.
+
+        See:
+          https://github.com/schmir/bbfreeze/commit/0ab0d7c7
+          https://github.com/doadin/ccfreeze/commit/59aa0162
+
+        """
+        if m.identifier == "zope":
+            fn = "%s/__init__.py" % (m.identifier.replace(".", "/"),)
+            code = compile("", fn, "exec")
+            self._writecode(fn + "c", time.time(), code)
 
     def _handle_Extension(self, m):
         name = m.identifier
@@ -742,7 +750,7 @@ if __name__ == '__main__':
     def _writecode(self, fn, mtime, code):
         code = replace_paths_in_code(code, fn)
         ziptime = time.localtime(mtime)[:6]
-        data = imp.get_magic() + struct.pack("<i", mtime) + marshal.dumps(code)
+        data = imp.get_magic() + struct.pack("<i", int(mtime)) + marshal.dumps(code)
         zinfo = zipfile.ZipInfo(fn, ziptime)
         if self.use_compression:
             zinfo.compress_type = zipfile.ZIP_DEFLATED
@@ -770,7 +778,7 @@ if __name__ == '__main__':
             else:
                 shutil.copy2(self.console, dst)
             os.chmod(dst, 0755)
-            
+
             if self.icon and sys.platform == 'win32':
                 try:
                     from bbfreeze import winexeutil
