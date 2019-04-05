@@ -1,8 +1,8 @@
+#! /usr/bin/env py.test
 from __future__ import print_function
 
-#! /usr/bin/env py.test
-
-import sys, os
+import os
+import sys
 
 
 def fullpath(x):

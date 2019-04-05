@@ -5,6 +5,8 @@
 # (http://matplotlib.sourceforge.net/examples/interactive.py)
 
 import sys
+import time
+from code import InteractiveConsole
 
 main = __import__("__main__")
 
@@ -62,10 +64,6 @@ if sys.argv[0]:
     exec(open(sys.argv[0], "r"), main.__dict__)
     sys.exit(0)
 
-
-from code import InteractiveConsole
-import time
-
 try:
     # rlcompleter also depends on readline
     import rlcompleter
@@ -83,10 +81,7 @@ class MyConsole(InteractiveConsole):
         if not readline:
             return
 
-        try:  # this form only works with python 2.3
-            self.completer = rlcompleter.Completer(self.locals)
-        except:  # simpler for py2.2
-            self.completer = rlcompleter.Completer()
+        self.completer = rlcompleter.Completer(self.locals)
 
         readline.set_completer(self.completer.complete)
         # Use tab for completions
@@ -97,8 +92,8 @@ class MyConsole(InteractiveConsole):
         # Bindings for incremental searches in the history. These searches
         # use the string typed so far on the command line and search
         # anything in the previous input history containing them.
-        readline.parse_and_bind('"\C-r": reverse-search-history')
-        readline.parse_and_bind('"\C-s": forward-search-history')
+        readline.parse_and_bind('"\\C-r": reverse-search-history')
+        readline.parse_and_bind('"\\C-s": forward-search-history')
 
     def runcode(self, code):
         stime = time.time()

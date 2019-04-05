@@ -9,12 +9,11 @@ __licence__ = "Same as bbfreeze"
 __version__ = "0.1"
 
 import os
-
-from distutils.util import get_platform
 from distutils import log
+from distutils.util import get_platform
 
-from setuptools.command.easy_install import easy_install, get_script_args
 from pkg_resources import Distribution, PathMetadata, normalize_path
+from setuptools.command.easy_install import easy_install, get_script_args
 
 
 class bdist_bbfreeze(easy_install):

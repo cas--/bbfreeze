@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import struct
-import win32api
 from functools import reduce
+
+import win32api
 
 
 class Icon:
@@ -86,7 +87,7 @@ class Icon:
         """
         Return an array with the bytes for each of the images in the icon.
         """
-        return _images
+        return self._images
 
 
 def set_icon(exe_filename, ico_filename):

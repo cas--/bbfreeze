@@ -1,21 +1,25 @@
 from __future__ import print_function
-import os
-import sys
-import re
-import time
-import shutil
-import struct
-import zipfile
+
 import imp
 import marshal
+import os
+import re
+import shutil
+import struct
+import sys
+import time
+import zipfile
 import zipimport
+
+from modulegraph import modulegraph
+
+from bbfreeze import eggutil, recipes
 
 try:
     from subprocess import getstatusoutput
 except ImportError:
     from commands import getstatusoutput
 
-from modulegraph import modulegraph
 
 modulegraph.replacePackage("_xmlplus", "xml")
 
@@ -46,7 +50,6 @@ else:
     for p in xml.__path__:
         modulegraph.addPackagePath("xml", p)
 
-from bbfreeze import recipes, eggutil
 
 try:
     import pkg_resources
@@ -133,7 +136,8 @@ class EggAnalyzer(object):
         for dist in self.usable:
             if fn.startswith(dist.location):
                 # do not include eggs if this is a namespace package
-                # e.g. "import zope" can find any of "zope.deferredimport", "zope.interface",...
+                # e.g. "import zope" can find any of "zope.deferredimport",
+                # "zope.interface",...
                 if dist.has_metadata("namespace_packages.txt"):
                     ns = list(dist.get_metadata_lines("namespace_packages.txt"))
                     if isinstance(m, modulegraph.Package) and m.identifier in ns:
@@ -285,7 +289,8 @@ class MyModuleGraph(modulegraph.ModuleGraph):
 
         if len(found) > 1:
             print(
-                "WARNING: found %s in multiple directories. Assuming it's a namespace package. (found in %s)"
+                "WARNING: found %s in multiple directories. Assuming it's a"
+                " namespace package. (found in %s)"
                 % (fullname, ", ".join(x[1] for x in found))
             )
             for x in found[1:]:
@@ -570,8 +575,8 @@ if __name__ == '__main__':
         status, out = getstatusoutput("objdump -x $S")
         if status:
             print(
-                "WARNING: objdump failed: could not determine RPATH by running 'objdump -x %s'"
-                % exe
+                "WARNING: objdump failed: could not determine RPATH by running"
+                " 'objdump -x %s'" % exe
             )
             return None
 
@@ -611,8 +616,8 @@ if __name__ == '__main__':
             return
 
         print(
-            "RPATH %r of %s needs adjustment. make sure you have the patchelf executable installed."
-            % (current_rpath, exe)
+            "RPATH %r of %s needs adjustment. make sure you have the patchelf"
+            " executable installed." % (current_rpath, exe)
         )
         self._setRPath(exe, expected_rpath)
 

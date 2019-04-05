@@ -1,8 +1,10 @@
+#! /usr/bin/env py.test
 from __future__ import print_function
 
-#! /usr/bin/env py.test
+import os
+import sys
 
-import py, sys, os
+import py
 
 pyexe = py.path.local(sys.executable)
 

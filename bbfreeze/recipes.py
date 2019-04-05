@@ -1,6 +1,7 @@
 from __future__ import print_function
-import sys
+
 import os
+import sys
 
 
 def isRealModule(m):
@@ -89,7 +90,8 @@ def recipe_xmlrpclib(mf):
     m = mf.findNode("xmlrpclib")
     if not isRealModule(m):
         return None
-    # we have python 2.0, SlowParser is not used as xml.parsers.expat.ParserCreate is available
+    # we have python 2.0, SlowParser is not used as
+    # xml.parsers.expat.ParserCreate is available
     mf.removeReference(m, "xmllib")
     return True
 
@@ -280,8 +282,6 @@ def recipe_tkinter(mf):
         return None
 
     if sys.platform == "win32":
-        import Tkinter
-
         tcldir = os.environ.get("TCL_LIBRARY")
         if tcldir:
             mf.copyTree(tcldir, "lib-tcl", m)

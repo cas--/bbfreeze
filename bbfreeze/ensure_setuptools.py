@@ -13,11 +13,15 @@ Can be used like:
 
 or
 
-  python -c 'from bbfreeze import ensure_setuptools; ensure_setuptools.main()' setup.py bdist_egg
+  python -c 'from bbfreeze import ensure_setuptools; ensure_setuptools.main()' \
+   setup.py bdist_egg
 """
 
-import sys, __main__
-import setuptools  # don't remove
+import sys
+
+import setuptools  # noqa: F401 don't remove
+
+import __main__
 
 
 def main():

@@ -1,10 +1,11 @@
 #! /usr/bin/env py.test
 try:
     import win32ui
-except:
+except ImportError:
     win32ui = None
 
 import os
+
 import bbfreeze
 
 if win32ui:

@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
-from __future__ import print_function
-import sys
-import email
+from __future__ import print_function, unicode_literals
 
-print(unicode("hello", "utf8"), unicode("world!", "ascii"))
+import sys
+
+print("hello".encode("utf8"), "world!".encode("ascii"))
 
 print("sys.path:", sys.path)
 print("__file__:", __file__)

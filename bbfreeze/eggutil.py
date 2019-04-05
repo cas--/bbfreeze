@@ -1,14 +1,15 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import sys
-import os
-import stat
-import zipfile
-import struct
+
 import imp
 import marshal
+import os
+import stat
+import struct
+import sys
 import time
+import zipfile
 
 
 class Entry(object):

@@ -1,16 +1,13 @@
 #! /usr/bin/env py.test
 
-import os, sys
+import os
+import sys
+
 import bbfreeze
 
 
 def test_icon():
-    pass
-
-
-if sys.platform == "win32":
-
-    def test_icon():
+    if sys.platform == "win32":
         f = bbfreeze.Freezer()
         f.addScript("ex-mbox.py", False)
         f.setIcon("python.ico")

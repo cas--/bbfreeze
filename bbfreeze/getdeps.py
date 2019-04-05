@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import sys, os, re
+
+import os
+import re
+import sys
 
 try:
     from subprocess import getoutput
@@ -16,19 +19,19 @@ except NameError:
 if sys.platform == "win32":
 
     # -----------------------
-    ## http://mail.python.org/pipermail/python-win32/2005-June/003446.html:
-    ##
-    ## Using it I found this: win32net.pyd from build 204 does *not* use the
-    ## LsaLookupNames2 function in advapi32.dll.  However, win32net.pyd links
-    ## to netapi32.dll (among others), and netapi32.dll links to advapi32.dll,
-    ## using the name LsaLookupNames2.  This was on WinXP.
+    # http://mail.python.org/pipermail/python-win32/2005-June/003446.html:
+    #
+    # Using it I found this: win32net.pyd from build 204 does *not* use the
+    # LsaLookupNames2 function in advapi32.dll.  However, win32net.pyd links
+    # to netapi32.dll (among others), and netapi32.dll links to advapi32.dll,
+    # using the name LsaLookupNames2.  This was on WinXP.
 
-    ## On win2k, netapi32.dll will not link to advapi32's LsaLookupNames2 -
-    ## otherwise it would not work.
+    # On win2k, netapi32.dll will not link to advapi32's LsaLookupNames2 -
+    # otherwise it would not work.
 
-    ## So, your exe *should* be able to run on win2k - except if you distribute
-    ## XP's netapi32.dll with your exe (I've checked this with a trivial
-    ## py2exe'd script).
+    # So, your exe *should* be able to run on win2k - except if you distribute
+    # XP's netapi32.dll with your exe (I've checked this with a trivial
+    # py2exe'd script).
     #
     # ----> EXCLUDE NETAPI32.DLL
 
@@ -112,12 +115,13 @@ if sys.platform == "win32":
                 try:
                     import win32api
                 except ImportError:
-
                     print(
-                        "Warning: Cannot determine your Windows or System directories because pywin32 is not installed."
+                        "Warning: Cannot determine your Windows or System"
+                        "directories because pywin32 is not installed."
                     )
                     print(
-                        "Warning: Either install it from http://sourceforge.net/projects/pywin32/ or"
+                        "Warning: Either install it from"
+                        "http://sourceforge.net/projects/pywin32/ or"
                     )
                     print("Warning: add them to your PATH if .dlls are not found.")
                 else:
@@ -195,7 +199,8 @@ elif sys.platform.startswith("linux"):
 
     def exclude(fp):
         return re.match(
-            r"^libc\.|^librt\.|^libcrypt\.|^libm\.|^libdl\.|^libpthread\.|^libnsl\.|^libutil\.|^libresolv\.|^ld-linux\.|^ld-linux-",
+            r"^libc\.|^librt\.|^libcrypt\.|^libm\.|^libdl\.|^libpthread\.|"
+            r"libnsl\.|^libutil\.|^libresolv\.|^ld-linux\.|^ld-linux-",
             os.path.basename(fp),
         )
 
@@ -203,8 +208,8 @@ elif sys.platform.startswith("linux"):
 else:
     if sys.platform != "darwin":
         print(
-            "Warning: don't know how to handle binary dependencies on this platform (%s)"
-            % (sys.platform,)
+            "Warning: don't know how to handle binary dependencies on this "
+            "platform (%s)" % (sys.platform,)
         )
 
     def _getDependencies(fp):

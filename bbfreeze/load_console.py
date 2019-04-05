@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
-import sys, os, zlib, zipimport
+import os
+import sys
+import zipimport
 
 installdir = os.path.normpath(
     os.path.dirname(sys.path[0])
@@ -100,7 +102,7 @@ addpath()
 addtcltk()
 
 try:
-    import encodings
+    import encodings  # noqa: F401
 except ImportError:
     pass
 

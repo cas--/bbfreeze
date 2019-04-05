@@ -1,6 +1,7 @@
 """bytecode manipulation"""
 from __future__ import print_function
 
+import sys
 from types import CodeType
 
 try:
@@ -14,7 +15,6 @@ def replace_functions(co, repl):
        repl can either be a code object or a source code string.
        returns a new code object.
     """
-    import new
 
     if isinstance(repl, basestring):
         repl = compile(repl, co.co_name, "exec")

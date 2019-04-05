@@ -1,11 +1,11 @@
 from __future__ import print_function
 
+import sys
+
 __version_info__ = (1, 1, 3)
 version = __version__ = "1.1.3"
 
-import sys
-
-from bbfreeze.freezer import Freezer
+from bbfreeze.freezer import Freezer  # noqa
 
 
 def main():
