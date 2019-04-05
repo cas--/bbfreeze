@@ -1,6 +1,9 @@
 from __future__ import print_function
 import os
-import Tkinter
+try:
+    import tkinter
+except ImportError:
+    import Tkinter as tkinter
 
 
 def main():

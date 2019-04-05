@@ -1,6 +1,13 @@
 """bytecode manipulation"""
 from __future__ import print_function
 
+from types import CodeType
+
+try:
+    basestring
+except NameError:
+    basestring = str
+
 
 def replace_functions(co, repl):
     """replace the functions in the code object co with those from repl.
@@ -25,7 +32,7 @@ def replace_functions(co, repl):
                 consts[i] = name2repl[c.co_name]
                 print("codehack: replaced %s in %s" % (c.co_name, co.co_filename))
 
-    return new.code(
+    codetype_args = [
         co.co_argcount,
         co.co_nlocals,
         co.co_stacksize,
@@ -40,4 +47,10 @@ def replace_functions(co, repl):
         co.co_lnotab,
         co.co_freevars,
         co.co_cellvars,
-    )
+    ]
+
+    if sys.version_info.major >= 3:
+        # Python 3 added `kwonlyargcount` as second argument to CodeType
+        codetype_args.insert(1, co.co_kwonlyargcount)
+
+    return CodeType(*codetype_args)

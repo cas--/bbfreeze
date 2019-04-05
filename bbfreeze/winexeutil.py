@@ -3,6 +3,7 @@
 
 import struct
 import win32api
+from functools import reduce
 
 
 class Icon:
@@ -52,7 +53,7 @@ class Icon:
     def header(self):
         """
         Return a tuple with the values in the header of the Icon.
-        
+
         Header is made of three values:
         - a reserved value
         - the type id
@@ -65,7 +66,7 @@ class Icon:
         Return an array with the tuples of the icons entries. An icon entry
         is a special header that describes an image. A single .ico file can
         contain multiple entries.
-        
+
         Each entry contains:
         - width
         - height

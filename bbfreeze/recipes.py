@@ -250,7 +250,7 @@ def get_platform():
         val,
     )
 
-    import codehack
+    from bbfreeze import codehack
 
     m.code = codehack.replace_functions(m.code, repl)
     return True

@@ -159,7 +159,10 @@ def copyDistribution(distribution, destdir):
             cmd = [
                 sys.executable,
                 "-c",
-                "import sys,__main__,setuptools; del sys.argv[0]; __main__.__file__=sys.argv[0], execfile(sys.argv[0],__main__.__dict__,__main__.__dict__)",
+                "import sys,__main__,setuptools; del sys.argv[0]; \
+                __main__.__file__=sys.argv[0], \
+                exec(compile(open(sys.argv[0]).read(), sys.argv[0], 'exec'), \
+                __main__.__dict__,__main__.__dict__)",
                 "setup.py",
                 "-q",
                 "bdist_egg",

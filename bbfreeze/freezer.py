@@ -9,7 +9,11 @@ import zipfile
 import imp
 import marshal
 import zipimport
-import commands
+
+try:
+    from subprocess import getstatusoutput
+except ImportError:
+    from commands import getstatusoutput
 
 from modulegraph import modulegraph
 
@@ -555,15 +559,15 @@ if __name__ == '__main__':
     def _getRPath(self, exe):
         os.environ["S"] = exe
 
-        status, out = commands.getstatusoutput("patchelf --version")
+        status, out = getstatusoutput("patchelf --version")
 
         if status == 0:
-            status, out = commands.getstatusoutput("patchelf --print-rpath $S")
+            status, out = getstatusoutput("patchelf --print-rpath $S")
             if status:
                 raise RuntimeError("patchelf failed: %r" % out)
             return out.strip() or None
 
-        status, out = commands.getstatusoutput("objdump -x $S")
+        status, out = getstatusoutput("objdump -x $S")
         if status:
             print(
                 "WARNING: objdump failed: could not determine RPATH by running 'objdump -x %s'"
@@ -586,7 +590,7 @@ if __name__ == '__main__':
         os.environ["S"] = exe
         os.environ["R"] = rpath
         print("running 'patchelf --set-rpath '%s' %s'" % (rpath, exe))
-        status, out = commands.getstatusoutput("patchelf --set-rpath $R $S")
+        status, out = getstatusoutput("patchelf --set-rpath $R $S")
         if status != 0:
             print("WARNING: failed to set RPATH for %s: %s" % (exe, out))
 

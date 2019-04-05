@@ -1,7 +1,17 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import sys, os, re, commands
+import sys, os, re
+
+try:
+    from subprocess import getoutput
+except ImportError:
+    from commands import getoutput
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 if sys.platform == "win32":
 
@@ -149,7 +159,7 @@ elif sys.platform.startswith("freebsd"):
 
     def _getDependencies(path):
         os.environ["P"] = path
-        s = commands.getoutput("ldd $P")
+        s = getoutput("ldd $P")
         res = [
             x for x in re.compile(r"^ *.* => (.*) \(.*", re.MULTILINE).findall(s) if x
         ]
@@ -163,7 +173,7 @@ elif sys.platform.startswith("sunos5"):
 
     def _getDependencies(path):
         os.environ["P"] = path
-        s = commands.getoutput("ldd $P")
+        s = getoutput("ldd $P")
         res = [
             x for x in re.compile(r"^\t* *.*=>\t* (.*)", re.MULTILINE).findall(s) if x
         ]
@@ -177,7 +187,7 @@ elif sys.platform.startswith("linux"):
 
     def _getDependencies(path):
         os.environ["P"] = path
-        s = commands.getoutput("ldd $P")
+        s = getoutput("ldd $P")
         res = [
             x for x in re.compile(r"^ *.* => (.*) \(.*", re.MULTILINE).findall(s) if x
         ]

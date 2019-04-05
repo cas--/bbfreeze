@@ -7,7 +7,8 @@ from setuptools import setup
 def get_version():
     d = {}
     try:
-        execfile("bbfreeze/__init__.py", d)
+        file_ = "bbfreeze/__init__.py"
+        exec(compile(open(file_).read(), file_, 'exec'), d)
     except Exception:
         pass
     return d["__version__"]
