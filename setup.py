@@ -10,16 +10,11 @@ from distutils.command import build_ext
 from distutils import sysconfig
 
 
-if sys.version_info >= (3, 0):
-    exec("def do_exec(co, loc): exec(co, loc)\n")
-else:
-    exec("def do_exec(co, loc): exec co in loc\n")
-
-
 def get_version():
     d = {}
+    file_ = "_bbfreeze_loader/__init__.py"
     try:
-        do_exec(open("_bbfreeze_loader/__init__.py", "r").read(), d)
+        exec(compile(open(file_).read(), file_, 'exec'), d)
     except Exception:
         pass
     return d["__version__"]
@@ -40,6 +35,8 @@ class Conf(object):
         VERSION = sysconfig.get_config_var("VERSION")
         if VERSION:
             self.PYTHONVERSION = "python%s" % (VERSION,)
+            if sys.version_info.major >= 3:
+                self.PYTHONVERSION += sys.abiflags
         else:
             self.PYTHONVERSION = ""
         self.linker = self._linker()
